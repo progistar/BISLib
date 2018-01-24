@@ -29,7 +29,7 @@ public class MGF extends BaseFormat{
 	private ArrayList<String> scans = null;
 	
 	public MGF(File file){
-		this(null, null);
+		this();
 		try{
 			read(file);
 		}catch(Exception e){}
@@ -56,8 +56,13 @@ public class MGF extends BaseFormat{
 		scans.clear();
 		scanMapper.clear();
 	}
-	public MGF(String[][] dataEntries, String[] fieldNames){
-		super(dataEntries, "\t", fieldNames);
+	
+	private MGF() {
+		super(null, "\t", field);
+	}
+	
+	public MGF(String[][] dataEntries){
+		super(dataEntries, "\t", field);
 	}
 	
 	private void read(File file) throws IOException{

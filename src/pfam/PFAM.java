@@ -15,6 +15,9 @@ import format.Flat;
 public class PFAM {
 
 	private static final String baseURL = "https://www.ebi.ac.uk/Tools/hmmer/search/hmmscan";
+	private static final String[] status = {
+			"results", "PEND"
+	};
 	
 	private static final String[] field = {
 			"display", 
@@ -37,6 +40,8 @@ public class PFAM {
 		ArrayList<String[]> tempResults = new ArrayList<String[]>();
 		for(int i=0; i<files.length; i++) {
 			
+			
+			String[] result = singleSearch(, )
 		}
 		
 		return result;

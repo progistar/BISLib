@@ -9,12 +9,16 @@ public class Fasta extends BaseFormat{
 	
 	public static final String[] field = {"HEADER", "SEQUENCE"};
 	
-	public Fasta(String[][] dataEntries, String[] fieldNames){
-		super(dataEntries, "\t", fieldNames);
+	public Fasta(String[][] dataEntries){
+		super(null, "\t", field);
+	}
+	
+	private Fasta() {
+		super(null, "\t", field);
 	}
 	
 	public Fasta(File file){
-		this(null, null);
+		this();
 		try{
 			read(file);
 		}catch(Exception e){}
@@ -50,7 +54,7 @@ public class Fasta extends BaseFormat{
 			}
 		}
 		// add the last sequence
-		dataEntries[rows][1] = line;
+		dataEntries[rows][1] = sequence.toString();
 		
 		BR.close();
 		
