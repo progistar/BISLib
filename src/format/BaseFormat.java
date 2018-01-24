@@ -16,6 +16,7 @@ public abstract class BaseFormat implements ValidChecker{
 	private String fieldMark = null;
 	private String delimiter = null;
 	private int skipNum = Constants.UNKOWN_NUMBER;
+	public boolean printableField = true;
 	
 	public boolean isInvalid(){
 		if(this.dataEntries == null || this.dataEntries.length == 0 || this.metaInfo == null){
@@ -153,10 +154,13 @@ public abstract class BaseFormat implements ValidChecker{
 			BufferedWriter BW = new BufferedWriter(new FileWriter(outFile));
 			boolean isWritable = false;
 
-			for(int i=0; i<this.metaInfo.field.length; i++){
-				if(i!=0) BW.append("\t");
-				BW.append(this.metaInfo.field[i]);
-			}BW.newLine();
+			// check if specific format needs to print a field line.
+			if(printableField) {
+				for(int i=0; i<this.metaInfo.field.length; i++){
+					if(i!=0) BW.append("\t");
+					BW.append(this.metaInfo.field[i]);
+				}BW.newLine();
+			}
 			
 			for(int index=0; index<this.metaInfo.rows; index++){
 				if(index == start) isWritable = true;

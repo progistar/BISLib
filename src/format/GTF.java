@@ -20,17 +20,22 @@ public class GTF extends BaseFormat{
 	public static final int strandCol = 6;
 	public static final int frameCol = 7;
 	public static final int attrCol = 8;
+	public static final String[] field = {"CHR", "SOURCE", "FEATURE", "START", "END", "SCORE", "STRAND", "FRAME", "ATTRS"};
 	
-	public GTF(String[][] dataEntries, String fieldMark, String delimiter, String[] fieldNames){
-		super(dataEntries, fieldMark, delimiter, fieldNames);
-	}
-	
-	public GTF(File file, String fieldMark, String delimiter){
-		super(file, fieldMark, delimiter);
+	public GTF(String[][] dataEntries, String fieldMark, String delimiter){
+		super(dataEntries, fieldMark, delimiter, null);
+		
+		// always meet this options.
+		this.printableField = false;
+		setField(field);
 	}
 	
 	public GTF(File file, int skipNum, String delimiter){
 		super(file, skipNum, delimiter);
+		
+		// always meet this options.
+		this.printableField = false;
+		setField(field);
 	}
 	
 	public String getNucleotides(int index, FastaWholeGenome fasta){

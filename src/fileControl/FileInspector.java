@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import envs.Constants;
 import format.BaseFormat;
 import format.Fasta;
+import format.Flat;
 import format.GTF;
 import format.MGF;
 import format.VCF;
@@ -62,6 +63,8 @@ public class FileInspector {
 			dupFlat = new MGF(dataEntries);
 		}else if(flat instanceof Fasta) {
 			dupFlat = new Fasta(dataEntries);
+		}else if(flat instanceof Flat) {
+			dupFlat = new Flat(dataEntries, flat.getFieldMark(), flat.getDelimiter(), flat.getField());
 		}
 		
 		return dupFlat;
