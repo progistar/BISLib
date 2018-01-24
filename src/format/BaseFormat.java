@@ -182,6 +182,16 @@ public abstract class BaseFormat implements ValidChecker{
 		}
 	}
 	
+	public void setAbsolutePath(String absolutePath) {
+		if(isInvalid()) return;
+		metaInfo.absolutePath = absolutePath;
+	}
+	
+	public void setFileName(String fileName) {
+		if(isInvalid()) return;
+		metaInfo.fileName = fileName;
+	}
+	
 	public void setField(String[] fieldName){
 		if(isInvalid()) return;
 		
