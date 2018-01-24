@@ -9,6 +9,11 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import envs.Constants;
 import fileControl.FileIO;
 import format.Fasta;
 import format.Flat;
@@ -24,11 +29,17 @@ public class PFAM {
 	
 	
 	private static final String[] field = {
-			"states", "location"
+			"PROTEIN_HEADER", "ALIGNED_NAME", "ALIGNED_DESC", "START_POS", "END_POS", "iEvalue", "STATES", "LOCATION"
 	};
 	
-	private static final int states_index = 0;
-	private static final int location_index = 1;
+	private static final int protein_header_index = 0;
+	private static final int aligned_name_index = 1;
+	private static final int aligned_desc_index = 2;
+	private static final int query_start_index = 3;
+	private static final int query_end_index = 4;
+	private static final int iEvalue_index = 5;
+	private static final int states_index = 6;
+	private static final int location_index = 7;
 	
 	public PFAM () {
 		System.out.println("PFAM Search Via EMBL-EBI HMMSCAN");
@@ -67,15 +78,15 @@ public class PFAM {
 			
 			for(int row=0; row<rows; row++) {
 				System.out.println("PFAM: request " + fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX));
-				String[] singleResult = singleSearch(fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX), fasta.getDataEntryAttr(row, Fasta.SEQUENCE_INDEX));
+				String[][] singleResult = singleSearch(fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX), fasta.getDataEntryAttr(row, Fasta.SEQUENCE_INDEX));
 				// status check
 				boolean isPass = true;
-				for(int stat=0; stat<states.length; stat++) if(singleResult[0].equalsIgnoreCase(states[stat])) isPass = false;
-				if(isPass) tempResults.add(singleResult);
+				for(int stat=0; stat<states.length; stat++) if(singleResult[0][states_index].equalsIgnoreCase(states[stat])) isPass = false;
+				if(isPass) for(int j=0; j<singleResult.length; j++) tempResults.add(singleResult[j]);
 				// if the network fell into fail status.
 				else {
 					fails.add(fasta.getDataEntries()[row]);
-					failLocation.add(singleResult[location_index]);
+					failLocation.add(singleResult[0][location_index]);
 				}
 			}
 			
@@ -99,15 +110,15 @@ public class PFAM {
 			System.err.println("Retrials: " + retrials);
 			
 			for(int row=0; row<rows; row++) {
-				String[] singleResult = retriveReponse(failLocation.get(row));
+				String[][] singleResult = retriveReponse(fails.get(row)[Fasta.HEADER_INDEHX], failLocation.get(row));
 				// status check
 				boolean isPass = true;
-				for(int stat=0; stat<states.length; stat++) if(singleResult[0].equalsIgnoreCase(states[stat])) isPass = false;
+				for(int stat=0; stat<states.length; stat++) if(singleResult[0][states_index].equalsIgnoreCase(states[stat])) isPass = false;
 				if(isPass) {
 					fails.remove(row);
 					failLocation.remove(row);
 					rows--; row--;
-					tempResults.add(singleResult);
+					for(int i=0; i<singleResult.length; i++) tempResults.add(singleResult[i]);
 				}
 			}
 		}
@@ -141,8 +152,8 @@ public class PFAM {
 		else return failList;
 	}
 	
-	public String[] singleSearch(String proteinHeader, String proteinSeq) {
-		String[] entry = null;
+	public String[][] singleSearch(String proteinHeader, String proteinSeq) {
+		String[][] entries = null;
 		
 		if(proteinHeader.charAt(0) != '>') proteinHeader = ">" + proteinHeader;
 		
@@ -170,28 +181,21 @@ public class PFAM {
 			
 			// Get the redirect RUL
 			String location = connection.getHeaderField("Location");
-			entry = retriveReponse(location);
+			entries = retriveReponse(proteinHeader, location);
 			
-			/*JSONParser jsonParser = new JSONParser();
-        	JSONObject jsonObj = (JSONObject) jsonParser.parse(inputLine);
-        	JSONArray results = (JSONArray) jsonObj.get("results");
-        	
-        	for(int i=0; i<results.size(); i++){
-        		JSONObject thisObj = (JSONObject) results.get(i);
-        		
-        	}*/
 			
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 		
 		
-		return entry;
+		return entries;
 	}
 	
-	private String[] retriveReponse(String location) {
+	private String[][] retriveReponse(String proteinHeader, String location) {
 		String result = "";
-		String[] entry = new String[field.length];
+		String[][] entries = null;
+		ArrayList<String[]> tempEntries = new ArrayList<String[]>();
 		
 		try {
 			URL respUrl = new URL( location );
@@ -207,19 +211,135 @@ public class PFAM {
 				result += line;
 			}
 			
-			if(result.contains("PEND")) {
-				entry[states_index] = "PEND";
-			}else {
-				entry[states_index] = "SUCCESS";
-			}
-			entry[location_index] = location;
+			result = changeToString(result);
+			System.out.println(result);
+
+			JSONParser jsonParser = new JSONParser();
+        	JSONObject jsonObj = (JSONObject) jsonParser.parse(result);
+        	jsonObj = (JSONObject) jsonObj.get("results");
+        	JSONArray bundleObjs = null;
+        	
+        	boolean isPass = false;
+        	if(jsonObj == null)  isPass = true;
+        	if(!isPass) {
+        		// results
+        		bundleObjs = (JSONArray) jsonObj.get("hits");
+        	}
+        	if(bundleObjs == null) isPass = true;
+        	if(!isPass) {
+        		// hits
+        		for(int i=0; i<bundleObjs.size(); i++) {
+        			jsonObj = (JSONObject) bundleObjs.get(i);
+        			JSONArray domains = (JSONArray) jsonObj.get("domains");
+        			if(domains == null) continue;
+        			// domains
+        			for(int j=0; j<domains.size(); j++) {
+        				jsonObj = (JSONObject) domains.get(j);
+        				// Threshold check
+        				String included = String.valueOf(jsonObj.get("is_included"));
+        				String reported = String.valueOf(jsonObj.get("is_reported"));
+        				
+        				if(included.equalsIgnoreCase("0") || reported.equalsIgnoreCase("0")) continue;
+        				// aligned HMM Name
+        				String alihmmname = String.valueOf(jsonObj.get("alihmmname"));
+        				// aligned HMM Description
+        				String alihmmdesc = String.valueOf(jsonObj.get("alihmmdesc"));
+        				// query start position
+        				String queryStart = String.valueOf(jsonObj.get("iali"));
+        				// query end position
+        				String queryEnd = String.valueOf(jsonObj.get("jali"));
+        				// independent evalue
+        				String iEvalue = String.valueOf(jsonObj.get("ievalue"));
+        				
+        				// set Info
+        				String[] entry = new String[field.length];
+        				entry[aligned_name_index] = alihmmname;
+        				entry[aligned_desc_index] = alihmmdesc;
+        				entry[query_start_index] = queryStart;
+        				entry[query_end_index] = queryEnd;
+        				entry[iEvalue_index] = iEvalue;
+        				tempEntries.add(entry);
+        			}
+        		}
+        	}
+        	
+        	int matchCnt = tempEntries.size();
+        	
+        	if(matchCnt == 0) {
+        		entries = new String[1][field.length];
+        		if(result.contains("PEND")) {
+    				entries[0][states_index] = "PEND";
+    			}else {
+    				entries[0][states_index] = "SUCCESS";
+    			}
+        		entries[0][protein_header_index] = proteinHeader;
+    			entries[0][location_index] = location;
+        		for(int i=aligned_name_index; i<states_index; i++) {
+        			entries[0][i] = Constants.UNKOWN_STRING;
+        		}
+        	}else {
+        		entries = new String[matchCnt][field.length];
+        		for(int i=0; i<matchCnt; i++) {
+        			entries[i][states_index] = "SUCCESS";
+        			entries[i][protein_header_index] = proteinHeader;
+        			entries[i][location_index] = location;
+        			for(int j=aligned_name_index; j<states_index; j++) {
+            			entries[0][j] = tempEntries.get(i)[j];
+            		}
+        		}
+        	}
+        	
+        	
 			
 		}catch(Exception e) {
-			
+			e.printStackTrace();
 		}
 		
 		
 		
-		return entry;
+		return entries;
+	}
+	
+	/**
+	 * All json elements become String Object.
+	 * This is because the huge number cannot be resolved.
+	 * 
+	 * 
+	 * @param json
+	 * @return
+	 */
+	private String changeToString(String json) {
+		StringBuilder jsonString = new StringBuilder();
+		char[] set = {'{', '"', '[', '}', ']'};
+		// the element will appear after : (colon).
+		
+		int len = json.length();
+		boolean startElement = false;
+		for(int i=0; i<len; i++) {
+			if(startElement) {
+				boolean isClose = false;
+				if(json.charAt(i) == ',') isClose = true;
+				else {
+					for(int j=0; j<set.length; j++) if(json.charAt(i) == set[j]) isClose = true;
+				}
+				
+				if(isClose) {
+					jsonString.append("\"");
+					startElement = false;
+				}
+			}
+			jsonString.append(json.charAt(i));
+			if(json.charAt(i) == ':' && !startElement) {
+				char nextChar = json.charAt(i+1);
+				boolean isGood = false;
+				for(int j=0; j<set.length; j++) if(nextChar == set[j]) isGood = true;
+				if(!isGood) {
+					startElement = true;
+					jsonString.append("\"");
+				}
+			}
+		}
+		
+		return jsonString.toString();
 	}
 }
