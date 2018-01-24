@@ -22,8 +22,8 @@ public class GTF extends BaseFormat{
 	public static final int attrCol = 8;
 	public static final String[] field = {"CHR", "SOURCE", "FEATURE", "START", "END", "SCORE", "STRAND", "FRAME", "ATTRS"};
 	
-	public GTF(String[][] dataEntries, String fieldMark, String delimiter){
-		super(dataEntries, fieldMark, delimiter, null);
+	public GTF(String[][] dataEntries, String delimiter){
+		super(dataEntries, delimiter, field);
 		
 		// always meet this options.
 		this.printableField = false;

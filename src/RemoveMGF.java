@@ -14,7 +14,7 @@ public class RemoveMGF {
 	public static void main(String[] args) throws IOException{
 		FileIO FI = new FileIO();
 		File[] listFiles = FI.getFiles("N33T34.txt");
-		GTF MODplusResult = new GTF(listFiles[0], "SpectrumFile", "\t");
+		GTF MODplusResult = new GTF(listFiles[0], 0, "\t");
 		
 		String[][] dataEntries = MODplusResult.getDataEntries();
 		

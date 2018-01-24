@@ -15,7 +15,7 @@ public class GTFTest {
 		File[] FastaFiles = FIO.getFiles("D:/db/WholeGenome/GRCh38.fa");
 		Translation translation = new Translation();
 		
-		GTF gtf = new GTF(GTFFiles[0], "1", "\t");
+		GTF gtf = new GTF(GTFFiles[0], 0, "\t");
 		System.out.println("Gtf.CHR: "+gtf.getChr(0));
 		System.out.println("Gtf.Loc: "+gtf.getStart(0)+":"+gtf.getEnd(0));
 		

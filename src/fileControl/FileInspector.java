@@ -56,7 +56,7 @@ public class FileInspector {
 				
 		BaseFormat dupFlat = null;
 		if(flat instanceof GTF){
-			dupFlat = new GTF(dupEntries, flat.getFieldMark(), flat.getDelimiter(), flat.getField());
+			dupFlat = new GTF(dupEntries, flat.getDelimiter());
 		}else if(flat instanceof VCF){
 			dupFlat = new VCF(dupEntries, flat.getFieldMark(), flat.getDelimiter(), flat.getField());
 		}else if(flat instanceof MGF){
