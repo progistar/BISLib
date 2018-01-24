@@ -60,7 +60,14 @@ public class PFAM {
 				result += line;
 			}
 			
-			
+			/*JSONParser jsonParser = new JSONParser();
+        	JSONObject jsonObj = (JSONObject) jsonParser.parse(inputLine);
+        	JSONArray results = (JSONArray) jsonObj.get("results");
+        	
+        	for(int i=0; i<results.size(); i++){
+        		JSONObject thisObj = (JSONObject) results.get(i);
+        		
+        	}*/
 			
 		}catch(Exception e){
 			e.printStackTrace();
