@@ -157,7 +157,7 @@ public abstract class BaseFormat implements ValidChecker{
 			// check if specific format needs to print a field line.
 			if(printableField) {
 				for(int i=0; i<this.metaInfo.field.length; i++){
-					if(i!=0) BW.append("\t");
+					if(i!=0) BW.append(this.delimiter);
 					BW.append(this.metaInfo.field[i]);
 				}BW.newLine();
 			}
@@ -168,7 +168,7 @@ public abstract class BaseFormat implements ValidChecker{
 				
 				if(isWritable){
 					for(int i=0; i<this.metaInfo.cols; i++){
-						if(i!=0) BW.append("\t");
+						if(i!=0) BW.append(this.delimiter);
 						BW.append(this.dataEntries[index][i]);
 					}
 					BW.newLine();

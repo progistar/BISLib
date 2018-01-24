@@ -7,14 +7,18 @@ import java.io.IOException;
 
 public class Fasta extends BaseFormat{
 	
+	public static final int HEADER_INDEHX = 0;
+	public static final int SEQUENCE_INDEX = 1;
 	public static final String[] field = {"HEADER", "SEQUENCE"};
 	
 	public Fasta(String[][] dataEntries){
-		super(null, "\t", field);
+		super(null, "\n", field);
+		this.printableField = false;
 	}
 	
 	private Fasta() {
-		super(null, "\t", field);
+		super(null, "\n", field);
+		this.printableField = false;
 	}
 	
 	public Fasta(File file){
@@ -44,17 +48,17 @@ public class Fasta extends BaseFormat{
 		while((line = BR.readLine()) != null) {
 			if(line.startsWith(">")) {
 				if(sequence.length() != 0) {
-					dataEntries[rows][1] = sequence.toString();
+					dataEntries[rows][SEQUENCE_INDEX] = sequence.toString();
 					sequence.setLength(0);
 					rows++;
 				}
-				dataEntries[rows][0] = line;
+				dataEntries[rows][HEADER_INDEHX] = line;
 			}else {
 				sequence.append(line);
 			}
 		}
 		// add the last sequence
-		dataEntries[rows][1] = sequence.toString();
+		dataEntries[rows][SEQUENCE_INDEX] = sequence.toString();
 		
 		BR.close();
 		
