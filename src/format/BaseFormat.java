@@ -37,7 +37,20 @@ public abstract class BaseFormat implements ValidChecker{
 			this.metaInfo.rows = dataEntries.length;
 			this.metaInfo.cols = dataEntries[0].length;
 		}
+	}
+	
+	public BaseFormat(String[][] dataEntries, String delimiter, String[] fieldNames){
 		
+		this.dataEntries = dataEntries;
+		this.delimiter = delimiter;
+		this.metaInfo = new MetaInfo();
+		this.metaInfo.field = fieldNames;
+		this.metaInfo.absolutePath = "IS_NOT_A_FILE";
+		this.metaInfo.fileName = "IS_NOT_A_FILE";
+		if(!isInvalid()){
+			this.metaInfo.rows = dataEntries.length;
+			this.metaInfo.cols = dataEntries[0].length;
+		}
 	}
 	
 	public BaseFormat(File file, int skip, String delimiter){

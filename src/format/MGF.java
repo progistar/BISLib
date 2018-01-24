@@ -16,7 +16,7 @@ public class MGF extends BaseFormat{
 	private static final String rtinsecondsMark = "RTINSECONDS";
 	private static final String chargeMark = "CHARGE";
 	private static final String endMark = "END IONS";
-	private static final String[] field = {"#TITLE","RTINSECONDS","PEPMASS","CHARGE","PEAKS"};
+	private static final String[] field = {"TITLE","RTINSECONDS","PEPMASS","CHARGE","PEAKS"};
 	//## Duplicated scan is represented as [OriginTitle$]
 	private final String dupMark = "$";
 	
@@ -29,7 +29,7 @@ public class MGF extends BaseFormat{
 	private ArrayList<String> scans = null;
 	
 	public MGF(File file){
-		this(null, "#", "\t", null);
+		this(null, null);
 		try{
 			read(file);
 		}catch(Exception e){}
@@ -56,9 +56,8 @@ public class MGF extends BaseFormat{
 		scans.clear();
 		scanMapper.clear();
 	}
-	public MGF(String[][] dataEntries, String fieldMark, String delimiter, String[] fieldNames){
-		super(dataEntries, fieldMark, delimiter, fieldNames);
-		
+	public MGF(String[][] dataEntries, String[] fieldNames){
+		super(dataEntries, "\t", fieldNames);
 	}
 	
 	private void read(File file) throws IOException{
