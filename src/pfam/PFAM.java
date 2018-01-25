@@ -95,7 +95,7 @@ public class PFAM {
 			for(int row=0; row<rows; row++) {
 				if(preventing(fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX))) continue;
 				System.out.println("PFAM: request " + fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX));
-				String[][] singleResult = singleSearch(fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX), fasta.getDataEntryAttr(row, Fasta.SEQUENCE_INDEX));
+				String[][] singleResult = search(fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX), fasta.getDataEntryAttr(row, Fasta.SEQUENCE_INDEX));
 				// status check
 				boolean isPass = true;
 				for(int stat=0; stat<states.length; stat++) if(singleResult[0][states_index].equalsIgnoreCase(states[stat])) isPass = false;
@@ -169,7 +169,44 @@ public class PFAM {
 		else return failList;
 	}
 	
-	public String[][] singleSearch(String proteinHeader, String proteinSeq) {
+	/**
+	 * PFAM Search without failure tolerance.
+	 * If network IO falls into failure, this methods doesn't handle it.
+	 * The output will be 'null' when it falls into failure.
+	 * If you want to control the failure, you should use batchSearch rather than this method.
+	 * 
+	 * @param proteinHeader
+	 * @param proteinSeq
+	 * @return
+	 */
+	public Flat singleSearch(String proteinHeader, String proteinSeq) {
+		
+		Flat singleResults = null;
+		ArrayList<String[]> tempResults = new ArrayList<String[]>();
+		
+		if(preventing(proteinHeader)) return null;
+		System.out.println("PFAM: request " + proteinHeader);
+		String[][] singleResult = search(proteinHeader, proteinSeq);
+		// status check
+		boolean isPass = true;
+		for(int stat=0; stat<states.length; stat++) if(singleResult[0][states_index].equalsIgnoreCase(states[stat])) isPass = false;
+		if(isPass) for(int j=0; j<singleResult.length; j++) tempResults.add(singleResult[j]);
+		
+		int rows = tempResults.size();
+		
+		if(rows != 0) {
+			String[][] dataEntries = new String[rows][field.length];
+			for(int row=0; row<rows; row++) dataEntries[row] = tempResults.get(row);
+			singleResults = new Flat(dataEntries, null, "\t", field);
+		}else {
+			System.err.println("It maybe network failure.");
+			System.err.println("You should retry this one.");
+		}
+		
+		return singleResults;
+	}
+	
+	private String[][] search(String proteinHeader, String proteinSeq) {
 		String[][] entries = null;
 		
 		if(proteinHeader.charAt(0) != '>') proteinHeader = ">" + proteinHeader;
