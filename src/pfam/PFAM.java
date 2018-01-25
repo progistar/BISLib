@@ -29,17 +29,32 @@ public class PFAM {
 	
 	
 	private static final String[] field = {
-			"PROTEIN_HEADER", "ALIGNED_NAME", "ALIGNED_DESC", "START_POS", "END_POS", "iEvalue", "STATES", "LOCATION"
+			"PROTEIN_HEADER", "ALIGNED_NAME", "ALIGNED_DESC", "QUERY_START-END", "ALIGNED_START-END", "iEvalue", "STATES", "LOCATION"
 	};
 	
 	private static final int protein_header_index = 0;
 	private static final int aligned_name_index = 1;
 	private static final int aligned_desc_index = 2;
-	private static final int query_start_index = 3;
-	private static final int query_end_index = 4;
+	private static final int query_start_end_index = 3;
+	private static final int hmm_start_end_index = 4;
 	private static final int iEvalue_index = 5;
 	private static final int states_index = 6;
 	private static final int location_index = 7;
+	
+	/**
+	 * Illegal string can cause json-parser problem.
+	 * It must be prevented.
+	 * 
+	 * @param str
+	 */
+	private boolean preventing(String str) {
+		if(str.contains(":")) {
+			System.err.println(": (colon) is prevented because of json-parser problem");
+			System.out.println("The result of "+str+" is skipped!!");
+			return true;
+		}
+		return false;
+	}
 	
 	public PFAM () {
 		System.out.println("PFAM Search Via EMBL-EBI HMMSCAN");
@@ -74,9 +89,11 @@ public class PFAM {
 		ArrayList<String> failLocation = new ArrayList<String>();
 		for(int i=0; i<files.length; i++) {
 			Fasta fasta = new Fasta(files[i]);
+			
 			int rows = fasta.getRows();
 			
 			for(int row=0; row<rows; row++) {
+				if(preventing(fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX))) continue;
 				System.out.println("PFAM: request " + fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX));
 				String[][] singleResult = singleSearch(fasta.getDataEntryAttr(row, Fasta.HEADER_INDEHX), fasta.getDataEntryAttr(row, Fasta.SEQUENCE_INDEX));
 				// status check
@@ -248,6 +265,10 @@ public class PFAM {
         				String queryStart = String.valueOf(jsonObj.get("iali"));
         				// query end position
         				String queryEnd = String.valueOf(jsonObj.get("jali"));
+        				// hmm start position
+        				String hmmStart = String.valueOf(jsonObj.get("alihmmfrom"));
+        				// hmm end position
+        				String hmmEnd = String.valueOf(jsonObj.get("alihmmto"));
         				// independent evalue
         				String iEvalue = String.valueOf(jsonObj.get("ievalue"));
         				
@@ -255,8 +276,8 @@ public class PFAM {
         				String[] entry = new String[field.length];
         				entry[aligned_name_index] = alihmmname;
         				entry[aligned_desc_index] = alihmmdesc;
-        				entry[query_start_index] = queryStart;
-        				entry[query_end_index] = queryEnd;
+        				entry[query_start_end_index] = queryStart+"-"+queryEnd;
+        				entry[hmm_start_end_index] = hmmStart+"-"+hmmEnd;
         				entry[iEvalue_index] = iEvalue;
         				tempEntries.add(entry);
         			}
@@ -284,7 +305,7 @@ public class PFAM {
         			entries[i][protein_header_index] = proteinHeader;
         			entries[i][location_index] = location;
         			for(int j=aligned_name_index; j<states_index; j++) {
-            			entries[0][j] = tempEntries.get(i)[j];
+            			entries[i][j] = tempEntries.get(i)[j];
             		}
         		}
         	}
@@ -309,6 +330,11 @@ public class PFAM {
 	 * @return
 	 */
 	private String changeToString(String json) {
+		// : (colon) is very important identifier in this algorithm.
+		// Therefore, the : must be replaced something.
+		
+		
+		
 		StringBuilder jsonString = new StringBuilder();
 		char[] set = {'{', '"', '[', '}', ']'};
 		// the element will appear after : (colon).
