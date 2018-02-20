@@ -41,6 +41,8 @@ public class PFAM {
 	private static final int states_index = 6;
 	private static final int location_index = 7;
 	
+	private static final int query_min_length = 10;
+	
 	/**
 	 * Illegal string can cause json-parser problem.
 	 * It must be prevented.
@@ -226,6 +228,9 @@ public class PFAM {
 					"&seq=" + proteinHeader +"\n" +
 					proteinSeq;
 			
+			// Unable characters will be changed
+			urlParameters = urlParameters.replaceAll(";", ",");
+			
 			connection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
 			
 			// Send request
@@ -234,8 +239,20 @@ public class PFAM {
 			wr.flush(); wr.close();
 			
 			// Get the redirect RUL
-			String location = connection.getHeaderField("Location");
-			entries = retriveReponse(proteinHeader, location);
+			
+			if(proteinSeq.length() < query_min_length){
+				entries = new String[1][field.length];
+				entries[0][states_index] = "MIN_LENGTH";
+        		entries[0][protein_header_index] = proteinHeader;
+    			entries[0][location_index] = Constants.UNKOWN_STRING;
+        		for(int i=aligned_name_index; i<states_index; i++) {
+        			entries[0][i] = Constants.UNKOWN_STRING;
+        		}
+			}else{
+				String location = connection.getHeaderField("Location");
+				entries = retriveReponse(proteinHeader, location);
+			}
+			
 			
 			
 		}catch(Exception e){
