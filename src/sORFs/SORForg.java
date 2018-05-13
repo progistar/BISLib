@@ -1,5 +1,7 @@
 package sORFs;
 
+import javax.management.Query;
+
 import format.Flat;
 
 public class SORForg {
